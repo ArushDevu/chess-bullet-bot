@@ -1,85 +1,105 @@
 # chess-bullet-bot
 
-A chess website where you can play bullet against a bot trained on my own bullet game history. The bot doesn't try to play *perfect* chess — it tries to play like me: same openings, same time usage, same premoves, and yes, the same blunders under time pressure.
+A web app for playing 1+0 bullet chess against a bot trained on my own game history. The goal isn't perfect chess. It's a bot that plays like me: the same openings, the same time usage, and the same mistakes under time pressure.
 
->Work in progress
+> **Status:** Early development. Game data collection works. The model, game logic, and playable board are not built yet. See the [Roadmap](#roadmap).
 
-## Features
+## How it will work
 
-- **Play bullet vs. the bot** (1+0) in the browser
-- **Human-like move choice** — predicts the move I'd most likely play, not the engine's best move
-- **Realistic clock behavior** — move times sampled from how long I actually take in similar positions
-- **Premoves & time-scramble blunders** modeled from real games
-- *(Planned)* Stats page comparing the bot's play to my real games
+1. **Collect.** Download my rated 1+0 games from the Chess.com public API as PGN.
+2. **Process.** Parse each game into positions, the move I played, and my remaining clock time.
+3. **Train.** Fit a move-prediction model that outputs the move I'm most likely to play, not the engine's best move.
+4. **Play.** A backend serves the bot's moves to the browser, delayed to match how long I'd take in that position.
 
-## How it works
+## Current state
 
-1. **Data** — My bullet games are exported as PGNs (e.g. from Lichess/Chess.com) into `data/`.
-2. **Processing** — Games are parsed into positions, the move I played, and my clock time at each move.
-3. **Model** — A move-prediction model is trained on those positions (see `bot/`).
-4. **Play** — The backend serves the bot's moves (with a delay matching its predicted think time) to the frontend over WebSockets.
+| Component | Status |
+|---|---|
+| Game download (`bot/fetch_games.py`) | Working |
+| Data processing | Not started |
+| Move-prediction model | Not started |
+| Backend API | FastAPI scaffold with a `/health` endpoint |
+| Frontend | Vite + React scaffold only |
 
 ## Tech stack
 
-| Layer    | Tech |
-|----------|------|
-| Frontend | React + TypeScript (Vite), chessground / react-chessboard, chess.js |
-| Backend  | Python, FastAPI, WebSockets |
-| Bot      | python-chess, PyTorch |
-| Database | PostgreSQL (or SQLite for local dev) |
+**In use:** Python, `requests`, FastAPI, uvicorn, React, Vite, oxlint
 
-## Project structure
+**Planned:** python-chess, PyTorch, WebSockets for live games, a React chessboard component
+
+## Repository layout
 
 ```
 chess-bullet-bot/
-├── backend/     # API server: game sessions, clocks, move endpoints
-├── bot/         # data processing, model training, inference
-├── data/        # raw PGNs + processed datasets (large files gitignored)
-├── frontend/    # web client
-├── tests/       # backend + bot tests
-├── .env.example # copy to .env and fill in
-└── requirements.txt
+├── bot/
+│   └── fetch_games.py   # downloads rated 1+0 games from Chess.com
+├── backend/
+│   └── main.py          # FastAPI app (health check only so far)
+├── frontend/            # React + Vite client
+├── requirements.txt
+└── README.md
 ```
+
+Downloaded games are written to `data/raw/`. That folder is gitignored and gets created the first time you run the fetch script.
 
 ## Getting started
 
 ### Prerequisites
-- Python 3.11+
-- Node.js 20+
 
-### Backend
+- Python 3.11+
+- Node.js 20.19+ or 22.12+ (required by Vite 8)
+
+### Set up Python
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env
+```
+
+### Download game data
+
+```bash
+python -m bot.fetch_games
+```
+
+This saves every rated, standard-rules 1+0 game for the account set in `CHESSCOM_USERNAME` (top of `bot/fetch_games.py`) to `data/raw/chesscom_games.pgn`. Re-running the script overwrites the file.
+
+### Run the backend
+
+With the virtual environment active, from the repository root:
+
+```bash
 uvicorn backend.main:app --reload
 ```
 
-### Frontend
+Check it's running at http://127.0.0.1:8000/health, which should return `{"status": "ok"}`.
+
+### Run the frontend
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-### Train the bot
-```bash
-# put your PGNs in data/raw/
-python -m bot.prepare_data
-python -m bot.train
-```
-
 ## Roadmap
 
-- [ ] Parse PGNs + clock times into a dataset
-- [ ] Baseline bot (opening book from my games + engine fallback)
+- [x] Download rated 1+0 games from Chess.com
+- [ ] Parse PGNs and clock times into a training dataset
+- [ ] Baseline bot: opening book from my games, engine fallback
 - [ ] Playable board with bullet clocks
+- [ ] Backend serving bot moves over WebSockets
 - [ ] Trained move-prediction model
 - [ ] Human-like move timing and premoves
+- [ ] Stats page comparing the bot to my real games
 - [ ] Deploy
 
-## Contributors
+## Contributing
+
+Work happens on feature branches and is merged into `main` through pull requests.
+
+## Authors
 
 - Arush Mishra
 - Arsh Gupta
