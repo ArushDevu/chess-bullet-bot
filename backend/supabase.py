@@ -13,4 +13,4 @@ supabase: Client = create_client(url, key)
 
 def createUser(username, email, password):
   hashedPassword = bcrypt.hashpw(password=password, salt=salt)
-  supabase.table("users").insert({"name": username, "email": email, "password": hashedPassword}).execute()
+  supabase.table("profiles").insert({"name": username, "email": email, "password": hashedPassword}).execute()
