@@ -25,7 +25,7 @@ import requests
 CHESSCOM_USERNAME = "chikki2021"
 
 # Contact info requested by Chess.com for API clients.
-CONTACT_INFO = "github.com/ArushDevu"
+CONTACT_INFO = "two.devs.code@gmail.com"
 
 # Resolve paths relative to the repository root.
 REPO_ROOT = Path(__file__).resolve().parent.parent
